@@ -3,64 +3,39 @@ package main.java.org.projet.data;
 import java.sql.Date;
 
 public class Film {
-    
     private Long idFilm;
-    public Long getIdFilm() {
-        return idFilm;
-    }
-    public void setIdFilm(Long idFilm) {
-        this.idFilm = idFilm;
-    }
-
     private String titre;
-    public String getTitre() {
-        return titre;
-    }
-    public void setTitre(String titre) {
-        this.titre = titre;
-    }
-
     private String realisateur;
-    public String getRealisateur() {
-        return realisateur;
-    }
-    public void setRealisateur(String realisateur) {
-        this.realisateur = realisateur;
-    }
-
     private String genre;
-    public String getGenre() {
-        return genre;
-    }
-    public void setGenre(String genre) {
+    private boolean dispoPhysique;
+    private Date dateSortie;
+
+    // Constructeur avec tous les paramètres
+    public Film(Long idFilm, String titre, String realisateur, String genre, boolean dispoPhysique, Date dateSortie) {
+        this.idFilm = idFilm;
+        this.titre = titre;
+        this.realisateur = realisateur;
         this.genre = genre;
-    }
-
-    private String dispoPhysique;
-    public String getDispoPhysique() {
-        return dispoPhysique;
-    }
-    public void setDispoPhysique(String dispoPhysique) {
         this.dispoPhysique = dispoPhysique;
+        this.dateSortie = dateSortie;
     }
 
-    private String dispoNumerique;
-    public String getDispoNumerique() {
-        return dispoNumerique;
-    }
-    public void setDispoNumerique(String dispoNumerique) {
-        this.dispoNumerique = dispoNumerique;
-    }
-    
-    private Date dateAjout;
-    public Date getDateAjout() {
-        return dateAjout;
-    }
-    public void setDateAjout(Date dateAjout) {
-        this.dateAjout = dateAjout;
-    } 
+    // Getters and Setters
+    public Long getIdFilm() { return idFilm; }
+    public void setIdFilm(Long idFilm) { this.idFilm = idFilm; }
 
+    public String getTitre() { return titre; }
+    public void setTitre(String titre) { this.titre = titre; }
 
+    public String getRealisateur() { return realisateur; }
+    public void setRealisateur(String realisateur) { this.realisateur = realisateur; }
+
+    public String getGenre() { return genre; }
+    public void setGenre(String genre) { this.genre = genre; }
+
+    public boolean isDispoPhysique() { return dispoPhysique; }
+    public void setDispoPhysique(boolean dispoPhysique) { this.dispoPhysique = dispoPhysique; }
+
+    public Date getDateSortie() { return dateSortie; }
+    public void setDateSortie(Date dateSortie) { this.dateSortie = dateSortie; }
 }
-
-
