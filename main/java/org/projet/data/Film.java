@@ -2,7 +2,10 @@ package main.java.org.projet.data;
 
 import java.sql.Date;
 
+//@Entity
 public class Film {
+    //@Id
+    //@GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idFilm;
     private String titre;
     private String realisateur;
