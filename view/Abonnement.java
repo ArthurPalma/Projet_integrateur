@@ -14,6 +14,21 @@ public class Abonnement extends JFrame{
         setSize(400, 300);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        
+      
+        JPanel buttonPanel1 = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JButton returnButton = new JButton("Retour à l'accueil");
+        returnButton.setFont(new Font("Arial", Font.BOLD, 16));
+        returnButton.setBackground(new Color(25, 25, 112));
+        returnButton.setForeground(Color.WHITE);
+        returnButton.addActionListener(e -> {
+            new Main().setVisible(true);
+            dispose();
+        });
+        buttonPanel1.add(returnButton);
+
+        add(buttonPanel1, BorderLayout.SOUTH);
+    
 
         JPanel subscriptionPanel = new JPanel();
         subscriptionPanel.setBackground(new Color(240, 248, 255));
@@ -37,6 +52,7 @@ public class Abonnement extends JFrame{
         buttonPanel.add(createSubscriptionButton);
 
         subscriptionPanel.add(buttonPanel, BorderLayout.CENTER);
+        
 
         loginButton.addActionListener(new ActionListener() {
             @Override
@@ -45,13 +61,14 @@ public class Abonnement extends JFrame{
                 dispose();
             }
         });
+        
 
         createSubscriptionButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                JOptionPane.showMessageDialog(null, "Page de création d'abonnement en cours de développement.", "Créer un abonnement", JOptionPane.INFORMATION_MESSAGE);
-            }
-        });
+                new Inscription().setVisible(true);
+                dispose();}  });
+        
 
         add(subscriptionPanel);
     }

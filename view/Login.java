@@ -34,7 +34,7 @@ public class Login extends JFrame {
         gbc.insets = new Insets(10, 10, 10, 10);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        JLabel usernameLabel = new JLabel("Nom d'utilisateur:");
+        JLabel usernameLabel = new JLabel("Email*:");
         usernameLabel.setFont(new Font("Arial", Font.PLAIN, 16));
         gbc.gridx = 0;
         gbc.gridy = 0;
@@ -45,7 +45,7 @@ public class Login extends JFrame {
         gbc.gridy = 0;
         fieldsPanel.add(usernameField, gbc);
 
-        JLabel passwordLabel = new JLabel("Mot de passe:");
+        JLabel passwordLabel = new JLabel("Mot de passe*:");
         passwordLabel.setFont(new Font("Arial", Font.PLAIN, 16));
         gbc.gridx = 0;
         gbc.gridy = 1;
@@ -75,9 +75,10 @@ public class Login extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 String username = usernameField.getText();
                 String password = new String(passwordField.getPassword());
-                if (authenticateUser(username, password)) {
+                String userEmail = authenticateUser(username, password);
+                if (userEmail != null) {
                     JOptionPane.showMessageDialog(null, "Connexion réussie!", "Succès", JOptionPane.INFORMATION_MESSAGE);
-                    EspaceAbonne.setCurrentUsername(username);
+                    EspaceAbonne.setCurrentUsername(userEmail);
                     new EspaceAbonne().setVisible(true);
                     dispose();
                 } else {
@@ -87,27 +88,22 @@ public class Login extends JFrame {
         });
     }
 
-    private boolean authenticateUser(String username, String password) {
-        // Vérification locale pour l'instant
-        if (username.equals("admin") && password.equals("1234")) {
-            return true;
-        }
-        // Vérification par base de données (désactivée pour le moment)
-        // String url = "jdbc:mysql://localhost:3306/al2000"; // URL de la base de données
-        // String user = "root"; // Nom d'utilisateur de la base de données
-        // String dbPassword = ""; // Mot de passe de la base de données
-        //
-        // try (Connection connection = DriverManager.getConnection(url, user, dbPassword);
-        //      PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM utilisateur WHERE nomUtilisateur = ? AND motDePasse = ?")) {
-        //     preparedStatement.setString(1, username);
-        //     preparedStatement.setString(2, password);
-        //     ResultSet resultSet = preparedStatement.executeQuery();
-        //     return resultSet.next();
-        // } catch (SQLException e) {
-        //     JOptionPane.showMessageDialog(this, "Erreur lors de l'authentification: " + e.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
-        //     return false;
-        // }
+    private String authenticateUser(String username, String password) {
+        String url = "jdbc:mysql://127.0.0.1:3306/projet_integrateur";
+        String user = "root"; 
+        String dbPassword = ""; 
 
-        return false;
+        try (Connection connection = DriverManager.getConnection(url, user, dbPassword);
+             PreparedStatement preparedStatement = connection.prepareStatement("SELECT email FROM utilisateurabonne WHERE email = ? AND password = ?")) {
+            preparedStatement.setString(1, username);
+            preparedStatement.setString(2, password);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getString("email");
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Erreur lors de l'authentification: " + e.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
+        }
+        return null;
     }
 }
