@@ -1,96 +1,128 @@
 package main.java.org.projet.dao;
 
-import main.java.org.projet.data.Historique;
-import java.sql.*;
+import main.java.org.projet.model.Historique;
+import org.hibernate.HibernateException;
+import org.hibernate.Session;
+import org.hibernate.Transaction;
+import org.hibernate.query.Query;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
 import java.util.ArrayList;
 import java.util.List;
 
 public class HistoriqueDAO implements CRUDRepository<Historique> {
-    private Connection connection;
-
-    public HistoriqueDAO(Connection connection) {
-        this.connection = connection;
-    }
-
     @Override
     public void create(Historique historique) {
-        String sql = "INSERT INTO Historique (idUtilisateur, idFilm, dateLocation, dateRetour) VALUES (?, ?, ?, ?)";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setLong(1, historique.getIdUtilisateur());
-            stmt.setLong(2, historique.getIdFilm());
-            stmt.setDate(3, historique.getDateLocation());
-            stmt.setDate(4, historique.getDateRetour());
-            stmt.executeUpdate();
-        } catch (SQLException e) {
+        Session session = HibernateConfig.getSessionFactory().getCurrentSession();
+        Transaction tx = null;
+
+        try {
+            tx = session.beginTransaction();
+            session.save(historique);
+            tx.commit();
+            ErrorUtil.getInstance().setErrorCode(0);
+        } catch (HibernateException e) {
+            if (tx != null) {
+                tx.rollback();
+            }
+            ErrorUtil.getInstance().setErrorCode(1);
+            ErrorUtil.getInstance().setMessage("Failed to create Historique");
             e.printStackTrace();
+        } finally {
+            session.close();
         }
     }
 
     @Override
     public Historique findById(Long id) {
-        String sql = "SELECT * FROM Historique WHERE idHistorique = ?";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setLong(1, id);
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                return new Historique(
-                    rs.getLong("idHistorique"),
-                    rs.getLong("idUtilisateur"),
-                    rs.getLong("idFilm"),
-                    rs.getDate("dateLocation"),
-                    rs.getDate("dateRetour")
-                );
-            }
-        } catch (SQLException e) {
+        Historique historique = null;
+        Session session = HibernateConfig.getSessionFactory().openSession();
+
+        try {
+            historique = session.get(Historique.class, id);
+            ErrorUtil.getInstance().setErrorCode(0);
+        } catch (HibernateException e) {
+            ErrorUtil.getInstance().setErrorCode(1);
+            ErrorUtil.getInstance().setMessage("Failed to find Historique");
             e.printStackTrace();
+        } finally {
+            session.close();
         }
-        return null;
+
+        return historique;
     }
 
     @Override
     public List<Historique> findAll() {
         List<Historique> historiques = new ArrayList<>();
-        String sql = "SELECT * FROM Historique";
-        try (Statement stmt = connection.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
-            while (rs.next()) {
-                historiques.add(new Historique(
-                    rs.getLong("idHistorique"),
-                    rs.getLong("idUtilisateur"),
-                    rs.getLong("idFilm"),
-                    rs.getDate("dateLocation"),
-                    rs.getDate("dateRetour")
-                ));
+        Session session = HibernateConfig.getSessionFactory().openSession();
+        Transaction tx = null;
+
+        try {
+            tx = session.beginTransaction();
+            CriteriaBuilder cb = session.getCriteriaBuilder();
+            CriteriaQuery<Historique> criteria = cb.createQuery(Historique.class);
+            criteria.select(criteria.from(Historique.class));
+            historiques = session.createQuery(criteria).getResultList();
+            tx.commit();
+            ErrorUtil.getInstance().setErrorCode(0);
+        } catch (HibernateException e) {
+            if (tx != null) {
+                tx.rollback();
             }
-        } catch (SQLException e) {
+            ErrorUtil.getInstance().setErrorCode(1);
+            ErrorUtil.getInstance().setMessage("Failed to fetch all Historique records");
             e.printStackTrace();
+        } finally {
+            session.close();
         }
+
         return historiques;
     }
 
     @Override
     public void update(Historique historique) {
-        String sql = "UPDATE Historique SET idUtilisateur = ?, idFilm = ?, dateLocation = ?, dateRetour = ? WHERE idHistorique = ?";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setLong(1, historique.getIdUtilisateur());
-            stmt.setLong(2, historique.getIdFilm());
-            stmt.setDate(3, historique.getDateLocation());
-            stmt.setDate(4, historique.getDateRetour());
-            stmt.setLong(5, historique.getIdHistorique());
-            stmt.executeUpdate();
-        } catch (SQLException e) {
+        Session session = HibernateConfig.getSessionFactory().getCurrentSession();
+        Transaction tx = null;
+
+        try {
+            tx = session.beginTransaction();
+            session.update(historique);
+            tx.commit();
+            ErrorUtil.getInstance().setErrorCode(0);
+            ErrorUtil.getInstance().setMessage("Update successful");
+        } catch (HibernateException e) {
+            if (tx != null) {
+                tx.rollback();
+            }
+            ErrorUtil.getInstance().setErrorCode(1);
+            ErrorUtil.getInstance().setMessage("Failed to update Historique");
             e.printStackTrace();
+        } finally {
+            session.close();
         }
     }
 
     @Override
     public void delete(Historique historique) {
-        String sql = "DELETE FROM Historique WHERE idHistorique = ?";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setLong(1, historique.getIdHistorique());
-            stmt.executeUpdate();
-        } catch (SQLException e) {
+        Session session = HibernateConfig.getSessionFactory().getCurrentSession();
+        Transaction tx = null;
+
+        try {
+            tx = session.beginTransaction();
+            session.delete(historique);
+            tx.commit();
+            ErrorUtil.getInstance().setErrorCode(0);
+            ErrorUtil.getInstance().setMessage("Delete successful");
+        } catch (HibernateException e) {
+            if (tx != null) {
+                tx.rollback();
+            }
+            ErrorUtil.getInstance().setErrorCode(1);
+            ErrorUtil.getInstance().setMessage("Failed to delete Historique");
             e.printStackTrace();
+        } finally {
+            session.close();
         }
     }
 }
