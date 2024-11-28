@@ -1,0 +1,119 @@
+-- Activation des événements planifiés (scheduler pour les procédures stockées)
+SET GLOBAL event_scheduler = ON;
+
+
+-- Créer une procédure stockée qui s'exécute en fin de mois pour vérifier le nombre de films loués par un abonné et appliquer la remise.
+DELIMITER $$
+
+CREATE PROCEDURE AppliquerRemiseFinMois()
+BEGIN
+    -- Déclare une variable pour indiquer si la boucle doit continuer ou non
+    DECLARE done INT DEFAULT 0;
+
+    -- Déclare une variable pour stocker l'identifiant de l'utilisateur
+    DECLARE current_utilisateur_id BIGINT;
+
+    -- Déclare une variable pour stocker le nombre de films loués par l'utilisateur
+    DECLARE nbFilmsLocates INT;
+
+    -- Déclare un curseur qui sélectionne les utilisateurs ayant effectué des locations ce mois-ci
+    DECLARE cur CURSOR FOR 
+        SELECT DISTINCT utilisateur_id
+        FROM Location
+        WHERE YEAR(dateLocation) = YEAR(CURDATE()) -- Filtrer par l'année en cours
+        AND MONTH(dateLocation) = MONTH(CURDATE()); -- Filtrer par le mois en cours
+
+    -- Déclare un gestionnaire pour fermer proprement le curseur si aucun utilisateur n'est trouvé
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+
+    -- Ouvre le curseur pour commencer à parcourir les utilisateurs
+    OPEN cur;
+
+    -- Début de la boucle pour traiter chaque utilisateur
+    read_loop: LOOP
+        -- Récupère l'identifiant de l'utilisateur actuel
+        FETCH cur INTO current_utilisateur_id;
+        
+        -- Si le curseur ne trouve plus d'utilisateur, on quitte la boucle
+        IF done THEN
+            LEAVE read_loop;
+        END IF;
+
+        -- Comptage des films loués par l'utilisateur durant ce mois
+        SELECT COUNT(*) INTO nbFilmsLocates
+        FROM Location
+        WHERE utilisateur_id = current_utilisateur_id
+        AND YEAR(dateLocation) = YEAR(CURDATE()) -- Vérification de l'année en cours
+        AND MONTH(dateLocation) = MONTH(CURDATE()); -- Vérification du mois en cours
+
+        -- Si l'utilisateur a loué plus de 20 films ce mois-ci, on lui attribue une remise
+        IF nbFilmsLocates > 20 THEN
+            -- Vérifie que l'utilisateur a une carte d'abonnement avant d'appliquer la remise
+            IF EXISTS (SELECT 1 FROM CarteAbonnement WHERE utilisateur_id = current_utilisateur_id) THEN
+                -- Applique une remise de 5 € sur le solde de la carte d'abonnement
+                UPDATE CarteAbonnement
+                SET solde = solde + 5  -- Exemple d'ajout de remise de 5 €
+                WHERE utilisateur_id = current_utilisateur_id;
+            END IF;
+        END IF;
+    END LOOP;
+
+    -- Ferme le curseur une fois que tous les utilisateurs ont été traités
+    CLOSE cur;
+END $$
+
+DELIMITER ;
+
+
+-- Créer un événement planifié pour exécuter la procédure stockée de remise à 23h l'avan-dernier jour du mois
+DELIMITER $$
+
+-- Supprimer l'événement s'il existe déjà
+DROP EVENT IF EXISTS RemiseFinMois;
+
+-- Créer l'événement planifié pour exécuter la procédure stockée en fin de mois
+CREATE EVENT RemiseFinMois
+ON SCHEDULE EVERY 1 MONTH
+STARTS LAST_DAY(CURDATE()) - INTERVAL 1 DAY + INTERVAL 23 HOUR -- Commence à 23h de l'avant-dernier jour
+DO
+    CALL AppliquerRemiseFinMois(); -- Appelle la procédure stockée définie ci-dessus
+
+DELIMITER ;
+
+
+
+
+
+
+
+
+-- Procédure de suppression des locations de plus de 10 ans :
+DELIMITER $$
+
+CREATE PROCEDURE SupprimerLocationsAnciennes()
+BEGIN
+    -- Supprime les enregistrements dans la table Location où la date de location est antérieure à 10 ans
+    DELETE FROM Location
+    WHERE dateLocation < CURDATE() - INTERVAL 10 YEAR;
+END $$
+
+DELIMITER ;
+
+
+
+
+-- Planification automatique de la suppression annuelle des locations anciennes :
+DELIMITER $$
+
+-- Supprimer l'événement s'il existe déjà
+DROP EVENT IF EXISTS SuppressionAnnuelleLocationsAnciennes;
+
+-- Planifie la suppression annuelle des locations anciennes
+CREATE EVENT SuppressionAnnuelleLocationsAnciennes
+ON SCHEDULE EVERY 1 YEAR
+STARTS '2024-12-31 23:00:00' -- Planifie pour le 31 décembre à 23h chaque année
+DO
+    CALL SupprimerLocationsAnciennes(); -- Appelle la procédure de suppression
+
+DELIMITER ;
+
