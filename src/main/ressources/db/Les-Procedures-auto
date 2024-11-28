@@ -1,6 +1,8 @@
 -- Activation des événements planifiés (scheduler pour les procédures stockées)
 SET GLOBAL event_scheduler = ON;
 
+-- Supprimer le proédure si elle existe déjà
+DROP PROCEDURE IF EXISTS AppliquerRemiseFinMois;
 
 -- Créer une procédure stockée qui s'exécute en fin de mois pour vérifier le nombre de films loués par un abonné et appliquer la remise.
 DELIMITER $$
@@ -69,14 +71,14 @@ DELIMITER ;
 DELIMITER $$
 
 -- Supprimer l'événement s'il existe déjà
-DROP EVENT IF EXISTS RemiseFinMois;
+DROP EVENT IF EXISTS RemiseFinMois$$
 
 -- Créer l'événement planifié pour exécuter la procédure stockée en fin de mois
 CREATE EVENT RemiseFinMois
 ON SCHEDULE EVERY 1 MONTH
 STARTS LAST_DAY(CURDATE()) - INTERVAL 1 DAY + INTERVAL 23 HOUR -- Commence à 23h de l'avant-dernier jour
 DO
-    CALL AppliquerRemiseFinMois(); -- Appelle la procédure stockée définie ci-dessus
+    CALL AppliquerRemiseFinMois()$$
 
 DELIMITER ;
 
@@ -84,11 +86,11 @@ DELIMITER ;
 
 
 
-
-
-
 -- Procédure de suppression des locations de plus de 10 ans :
 DELIMITER $$
+
+-- Supprimer la procédure si elle existe déjà
+DROP PROCEDURE IF EXISTS SupprimerLocationsAnciennes;
 
 CREATE PROCEDURE SupprimerLocationsAnciennes()
 BEGIN
@@ -113,7 +115,7 @@ CREATE EVENT SuppressionAnnuelleLocationsAnciennes
 ON SCHEDULE EVERY 1 YEAR
 STARTS '2024-12-31 23:00:00' -- Planifie pour le 31 décembre à 23h chaque année
 DO
-    CALL SupprimerLocationsAnciennes(); -- Appelle la procédure de suppression
+    CALL SupprimerLocationsAnciennes() $$ -- Appelle la procédure de suppression
 
 DELIMITER ;
 
