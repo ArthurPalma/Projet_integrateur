@@ -1,3 +1,7 @@
+-- Création et connexion à la base de données : tpcommun
+CREATE DATABASE tpcommun;
+USE tpcommun;
+
 CREATE TABLE Abonnement (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     numCarte BIGINT UNIQUE NOT NULL,
